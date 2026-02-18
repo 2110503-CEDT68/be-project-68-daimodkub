@@ -10,13 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/2110503-CEDT68/a-4-Spidergy07.git"
+    "url": "git+https://github.com/2110503-CEDT68/a-5-Spidergy07.git"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.7",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "mongoose": "^9.2.1",
+    "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

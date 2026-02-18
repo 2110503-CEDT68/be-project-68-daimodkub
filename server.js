@@ -1,12 +1,17 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const connectDB = require('./config/db');
 
 // Load env vars
 dotenv.config({ path: './config/config.env' });
+connectDB();
 
 const hospitals = require('./routes/hospitals');
 
 const app = express();
+
+// Body parser
+app.use(express.json());
 
 app.use('/api/v1/hospitals', hospitals);
 
