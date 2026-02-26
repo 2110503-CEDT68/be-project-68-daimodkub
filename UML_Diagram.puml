@@ -1,0 +1,39 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+
+class User {
+  + _id: ObjectId
+  + name: String
+  + tel: String
+  + email: String
+  + role: String
+  - password: String
+  + createdAt: Date
+  + getSignedJwtToken(): String
+  + matchPassword(enteredPassword: String): Boolean
+}
+
+class MassageShop {
+  + _id: ObjectId
+  + name: String
+  + address: String
+  + tel: String
+  + opentime: String
+  + closetime: String
+  + reservations: Object[]
+}
+
+class Reservation {
+  + _id: ObjectId
+  + date: Date
+  + user: ObjectId
+  + massageShop: ObjectId
+  + createdAt: Date
+}
+
+' ความสัมพันธ์ระหว่าง Class
+User "1" --> "0..*" Reservation : makes >
+MassageShop "1" --> "0..*" Reservation : has >
+
+@enduml

@@ -1,0 +1,80 @@
+@startuml
+skinparam monochrome true
+skinparam participantPadding 20
+skinparam boxPadding 10
+
+actor Client
+
+box "Server (Node.js/Express)"
+participant "Router" as Route
+participant "Auth Middleware" as Auth
+participant "Reservation Controller" as Ctrl
+end box
+
+database "MongoDB (Mongoose)" as DB
+
+Client -> Route : POST /api/v1/massageShops/:id/reservations\n(Header: Bearer Token, Body: date)
+activate Route
+
+Route -> Auth : protect()
+activate Auth
+Auth -> DB : User.findById(decoded._id)
+activate DB
+DB --> Auth : return User details
+deactivate DB
+
+alt Invalid Token or User not found
+    Auth --> Client : 401 Unauthorized
+else Token Valid
+    Auth -> Route : next() (Proceed to Role Check)
+end
+
+Route -> Auth : authorize('admin', 'user')
+alt Role not permitted
+    Auth --> Client : 403 Forbidden
+else Role permitted
+    Auth -> Route : next() (Proceed to Controller)
+end
+deactivate Auth
+
+Route -> Ctrl : addReservation(req, res)
+activate Ctrl
+
+Ctrl -> DB : MassageShop.findById(req.params.id)
+activate DB
+DB --> Ctrl : return MassageShop
+deactivate DB
+
+alt MassageShop not found
+    Ctrl --> Client : 404 Not Found
+else MassageShop exists
+    
+    Ctrl -> DB : Reservation.find({ user: req.user.id })
+    activate DB
+    DB --> Ctrl : return existing reservations
+    deactivate DB
+    
+    Ctrl -> Ctrl : Check if reservations.length >= 3\n(if not admin)
+    
+    alt Over limit (>= 3)
+        Ctrl --> Client : 400 Bad Request
+    else Under limit
+        
+        Ctrl -> Ctrl : Check for overlapping times
+        alt Time overlapped
+            Ctrl --> Client : 400 Bad Request
+        else Time available
+            Ctrl -> DB : Reservation.create(req.body)
+            activate DB
+            DB --> Ctrl : return new Reservation
+            deactivate DB
+            
+            Ctrl --> Client : 200 OK (Reservation Data)
+        end
+    end
+end
+
+deactivate Ctrl
+deactivate Route
+
+@enduml
