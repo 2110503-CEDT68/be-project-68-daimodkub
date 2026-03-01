@@ -46,11 +46,11 @@ exports.getMassageShops = async (req, res, next) => {
     const limit = parseInt(req.query.limit, 10) || 25;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await MassageShop.countDocuments();
-
-    query = query.skip(startIndex).limit(limit);
-
+    
     try {
+        const total = await MassageShop.countDocuments();
+        
+
         // Executing query
         const massageShops = await query;
 
