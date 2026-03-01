@@ -14,21 +14,24 @@ const router = express.Router();
  *       required:
  *         - name
  *         - address
+ *         - tel
+ *         - opentime
+ *         - closetime
  *       properties:
  *         id:
  *           type: string
- *           format: uuid
- *           description: The auto-generated id of the massageShop
- *           example: d290f1ee-6c54-4b01-90e6-d701748f0851
- *         ลําดับ:
+ *           description: Auto-generated ID
+ *           example: 609bda561452242d88d36e37
+ *         ลำดับ:
  *           type: string
  *           description: Ordinal number
+ *           example: "1"
  *         name:
  *           type: string
- *           description: MassageShop name
+ *           description: Massage shop name
  *         address:
  *           type: string
- *           description: House No., Street, Road
+ *           description: Street address
  *         district:
  *           type: string
  *           description: District
@@ -40,19 +43,27 @@ const router = express.Router();
  *           description: 5-digit postal code
  *         tel:
  *           type: string
- *           description: telephone number
+ *           description: Telephone number
+ *         opentime:
+ *           type: string
+ *           example: "09:00"
+ *         closetime:
+ *           type: string
+ *           example: "22:00"
  *         region:
  *           type: string
  *           description: region
  *       example:
  *         id: 609bda561452242d88d36e37
- *         ลําดับ: 121
- *         name: Happy MassageShop
+ *         ลำดับ: "1"
+ *         name: Happy Massage
  *         address: 121 ถ.สุขุมวิท
  *         district: บางนา
  *         province: กรุงเทพมหานคร
  *         postalcode: 10110
  *         tel: 02-2187000
+ *         opentime: "09:00"
+ *         closetime: "22:00"
  *         region: กรุงเทพมหานคร (Bangkok)
  */
 
