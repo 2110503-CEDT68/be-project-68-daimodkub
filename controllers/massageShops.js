@@ -49,7 +49,7 @@ exports.getMassageShops = async (req, res, next) => {
     
     try {
         const total = await MassageShop.countDocuments();
-        
+        query = query.skip(startIndex).limit(limit);
 
         // Executing query
         const massageShops = await query;
