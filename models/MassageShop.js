@@ -38,10 +38,10 @@ MassageShopSchema.virtual('reservations', {
     justOne: false
 });
 
-//Cascade delete reservations when a massageShop is deleted
-HospitalSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
-    console.log(`Appointments being removed from hospital ${this._id}`);
-    await this.model('Appointment').deleteMany({ hospital: this._id });
+// Cascade delete reservations when a massageShop is deleted
+MassageShopSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+    console.log(`Reservations being removed from massage shop ${this._id}`);
+    await this.model('Reservation').deleteMany({ massageShop: this._id });
     next();
 });
 
