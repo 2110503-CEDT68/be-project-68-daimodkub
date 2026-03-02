@@ -1,0 +1,501 @@
+{
+  "info": {
+    "_postman_id": "940581a7-c72c-4718-868d-dc540eb50889",
+    "name": "User Flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52482842",
+    "_collection_link": "https://go.postman.co/collection/52482842-940581a7-c72c-4718-868d-dc540eb50889?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "User Registration",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "pm.execution.setNextRequest(\"User Log-in\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const uuid = pm.variables.replaceIn('{{$guid}}');",
+              "",
+              "pm.environment.set(\"name\", \"user_\" + uuid);",
+              "pm.environment.set(\"email\", `user_${uuid}@gmail.com`);",
+              "pm.environment.set(\"tel\", \"08\" + uuid.substring(0,8));",
+              "pm.environment.set(\"password\", \"password\");",
+              "pm.environment.set(\"role\", \"user\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"{{name}}\",\n    \"tel\": \"{{tel}}\",\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"role\": \"{{role}}\"\n}\n// {\n//     \"name\": \"test_user\",\n//     \"tel\": \"12345678\",\n//     \"email\": \"testuser@gmail.com\",\n//     \"password\": \"password\",\n//     \"role\": \"user\"\n\n//     // \"name\": \"test_admin\",\n//     // \"tel\": \"12345678\",\n//     // \"email\": \"testadmin@gmail.com\",\n//     // \"password\": \"password\",\n//     // \"role\": \"admin\"\n// }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/auth/register",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User Log-in",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "const res = pm.response.json();",
+              "pm.environment.set(\"USER_TOKEN\", res.token);",
+              "",
+              "pm.execution.setNextRequest(\"User View Product\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/auth/login",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User View Product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "pm.environment.set(\"MASSAGE_SHOP_ID\", jsonData.data[0]._id);",
+              "",
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "const res = pm.response.json();",
+              "pm.expect(res.count).to.be.above(0);",
+              "",
+              "pm.execution.setNextRequest(\"User Create Booking\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/massageShops",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "massageShops"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User Create Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "const status = pm.response.code;",
+              "",
+              "if (status === 200) {",
+              "    pm.test(\"User booking created\", () => {",
+              "        pm.expect(res.success).to.be.true;",
+              "    });",
+              "",
+              "    if (res.data && res.data._id) {",
+              "        pm.environment.set(\"RESERVATION_ID\", res.data._id);",
+              "    }",
+              "",
+              "    pm.execution.setNextRequest(\"User View Own Booking\");",
+              "}",
+              "",
+              "else if (status === 400) {",
+              "    pm.test(\"Booking rejected due to shop hours\", () => {",
+              "        pm.expect(res.success).to.be.false;",
+              "        pm.expect(res.message).to.include(\"only open\");",
+              "    });",
+              "",
+              "    console.warn(\"User booking failed:\", res.message);",
+              "",
+              "    pm.execution.setNextRequest(\"User View Own Booking\");",
+              "}",
+              "",
+              "else {",
+              "    pm.test(\"Unexpected status\", () => {",
+              "        pm.expect.fail(`Unexpected status: ${status}`);",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const randomDays = Math.floor(Math.random() * 30) + 1;",
+              "const randomHour = Math.floor(Math.random() * 8) + 10;",
+              "",
+              "let bookingDate = new Date();",
+              "bookingDate.setDate(bookingDate.getDate() + randomDays);",
+              "bookingDate.setHours(randomHour, 0, 0, 0);",
+              "",
+              "pm.variables.set(\"random_booking_date\", bookingDate.toISOString());",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{USER_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"date\": \"{{random_booking_date}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/massageShops/{{MASSAGE_SHOP_ID}}/reservations",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "massageShops",
+            "{{MASSAGE_SHOP_ID}}",
+            "reservations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User View Own Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "pm.execution.setNextRequest(\"User Edit Own Booking\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{USER_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/reservations",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reservations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User Edit Own Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "pm.execution.setNextRequest(\"User Delete Own Booking\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{USER_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"date\": \"2026-03-02T15:00:00.000Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/reservations/{{RESERVATION_ID}}",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reservations",
+            "{{RESERVATION_ID}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User Delete Own Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "pm.execution.setNextRequest(\"User Log-out\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{USER_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/reservations/{{RESERVATION_ID}}",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reservations",
+            "{{RESERVATION_ID}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User Log-out",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"User logged out\", () => pm.response.to.have.status(200));",
+              "pm.execution.setNextRequest(null);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/auth/logout",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "logout"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "user_token",
+      "value": ""
+    },
+    {
+      "key": "TOKEN",
+      "value": ""
+    },
+    {
+      "key": "MASSAGE_SHOP_ID",
+      "value": ""
+    },
+    {
+      "key": "RESERVATION_ID",
+      "value": ""
+    }
+  ]
+}
