@@ -1,0 +1,466 @@
+{
+  "info": {
+    "_postman_id": "00f3b2f9-d369-40d1-8884-ad445c515b2a",
+    "name": "Admin Flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52482842",
+    "_collection_link": "https://go.postman.co/collection/52482842-00f3b2f9-d369-40d1-8884-ad445c515b2a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Admin Log-in",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "const res = pm.response.json();",
+              "pm.environment.set(\"ADMIN_TOKEN\", res.token);",
+              "",
+              "pm.execution.setNextRequest(\"Admin View Product\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"testadmin@gmail.com\",\n    \"password\": \"password\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/auth/login",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin View Product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "pm.environment.set(\"MASSAGE_SHOP_ID\", jsonData.data[0]._id);",
+              "",
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "const res = pm.response.json();",
+              "pm.expect(res.count).to.be.above(0);",
+              "",
+              "pm.execution.setNextRequest(\"Admin Create Booking\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/api/v1/massageShops",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "massageShops"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin Create Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "const status = pm.response.code;",
+              "",
+              "if (status === 200) {",
+              "    pm.test(\"Booking created successfully\", () => {",
+              "        pm.expect(res.success).to.be.true;",
+              "    });",
+              "",
+              "    if (res.data && res.data._id) {",
+              "        pm.environment.set(\"ADMIN_BOOKING_ID\", res.data._id);",
+              "    }",
+              "",
+              "    pm.execution.setNextRequest(\"Admin View All Booking\");",
+              "}",
+              "",
+              "else if (status === 400) {",
+              "    pm.test(\"Booking rejected due to shop hours\", () => {",
+              "        pm.expect(res.success).to.be.false;",
+              "        pm.expect(res.message).to.include(\"only open\");",
+              "    });",
+              "",
+              "    console.log(\"Booking failed:\", res.message);",
+              "",
+              "    pm.execution.setNextRequest(\"Admin View All Booking\");",
+              "}",
+              "",
+              "else {",
+              "    pm.test(\"Unexpected status\", () => {",
+              "        pm.expect.fail(`Unexpected status: ${status}`);",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const randomDays = Math.floor(Math.random() * 30) + 1;",
+              "const randomHour = Math.floor(Math.random() * 8) + 10;",
+              "",
+              "let bookingDate = new Date();",
+              "bookingDate.setDate(bookingDate.getDate() + randomDays);",
+              "bookingDate.setHours(randomHour, 0, 0, 0);",
+              "",
+              "pm.variables.set(\"random_booking_date\", bookingDate.toISOString());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{ADMIN_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"date\": \"{{random_booking_date}}\"\n    // \"date\": \"2026-03-31T12:01:10\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/massageShops/{{MASSAGE_SHOP_ID}}/reservations",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "massageShops",
+            "{{MASSAGE_SHOP_ID}}",
+            "reservations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin View All Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "pm.environment.set(\"RESERVATION_ID\", jsonData.data[0]._id);",
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "const res = pm.response.json();",
+              "pm.expect(res.count).to.be.above(0);",
+              "",
+              "pm.execution.setNextRequest(\"Admin Edit Any Booking\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{ADMIN_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/api/v1/reservations",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reservations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin Edit Any Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "pm.execution.setNextRequest(\"Admin Delete Any Booking\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{ADMIN_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"date\": \"2026-04-13T10:00:00.000Z\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/v1/reservations/{{RESERVATION_ID}}",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reservations",
+            "{{RESERVATION_ID}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin Delete Any Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "pm.execution.setNextRequest(\"Admin View Own Booking\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{ADMIN_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/api/v1/reservations/{{RESERVATION_ID}}",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reservations",
+            "{{RESERVATION_ID}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin Log-out",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.environment.set(\"TOKEN\", \"\");",
+              "",
+              "pm.test(\"Admin logged out\", () => pm.response.to.have.status(200));",
+              "pm.execution.setNextRequest(null);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/api/v1/auth/logout",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "logout"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin View Own Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "",
+              "pm.execution.setNextRequest(\"Admin Log-out\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{ADMIN_TOKEN}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/api/v1/reservations/me",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reservations",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "TOKEN",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YTU1M2M3OWNmYmY5YTVjM2EyYTFlYyIsImlhdCI6MTc3MjQ0Mjk5MSwiZXhwIjoxNzc1MDM0OTkxfQ.Jg0ut5cEWf8sqx0-PuYYlPeXlR80Vz8s1G-MH7-USVI"
+    },
+    {
+      "key": "RESERVATION_ID",
+      "value": ""
+    },
+    {
+      "key": "MASSAGE_SHOP_ID",
+      "value": "69a55344c2abd15af7f2dbe2"
+    }
+  ]
+}
