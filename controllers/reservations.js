@@ -84,6 +84,20 @@ exports.addReservation = async (req, res, next) => {
             return res.status(404).json({ success: false, message: `No massageShop with the id of ${req.params.massageShopId}` });
         }
 
+//Extra Credit
+        const reserveDate = new Date(req.body.date);
+        const reserveHour = reserveDate.getHours().toString().padStart(2, '0');
+        const reserveMinute = reserveDate.getMinutes().toString().padStart(2, '0');
+        const reserveTime = `${reserveHour}:${reserveMinute}`;
+
+        if (reserveTime < massageShop.opentime || reserveTime > massageShop.closetime) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot reserve. The shop is only open from ${massageShop.opentime} to ${massageShop.closetime}.`
+            });
+        }
+// End Extra Credit
+
         //Check for existed reservation
         const existedReservations = await Reservation.find({ user: req.user.id });
 
@@ -167,5 +181,27 @@ exports.deleteReservation = async (req, res, next) => {
     } catch (error) {
         console.log(error.stack);
         return res.status(500).json({ success: false, message: "Cannot delete Reservation" });
+    }
+};
+
+// @desc    Get current user's reservations (View Own)
+// @route   GET /api/v1/reservations/me
+// @access  Private
+exports.getOwnReservations = async (req, res, next) => {
+    try {
+        // บังคับหาเฉพาะการจองที่ตรงกับรหัส (ID) ใน Token ของคนที่ยิงเข้ามา
+        const reservations = await Reservation.find({ user: req.user.id }).populate({
+            path: 'massageShop',
+            select: 'name address tel' // เลือกฟิลด์ที่จะแสดงของร้านนวด
+        });
+
+        res.status(200).json({
+            success: true,
+            count: reservations.length,
+            data: reservations
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Cannot find your reservations" });
     }
 };
